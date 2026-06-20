@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,12 +18,16 @@ class Settings(BaseSettings):
     service_version: str = "0.1.0"
     api_prefix: str = "/api/v1"
 
-    database_url: str = "postgresql+asyncpg://govflow:devpassword@localhost:5432/govflow"
+    database_url: str = Field(
+        "postgresql+asyncpg://govflow:devpassword@localhost:5432/govflow",
+        env=["DATABASE_URL", "POSTGRES_URL"],
+    )
     database_enabled: bool = True
     redis_url: str = "redis://localhost:6379/0"
     celery_broker_url: str | None = None
+    qdrant_url: str = Field("", env=["QDRANT_URL"])
 
-    openai_api_key: str = ""
+    openai_api_key: str = Field("", env=["OPENAI_API_KEY", "LLM_API_KEY"])
     openai_model: str = "gpt-4o-mini"
     openai_embedding_model: str = "text-embedding-3-small"
 

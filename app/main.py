@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
@@ -14,13 +13,7 @@ from app.api.router import api_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 
-logger = logging.getLogger(__name__)
-
-
-def _has_env_value(*names: str) -> bool:
-    """Return whether any named environment variable is set to a non-empty value."""
-
-    return any(os.getenv(name, "").strip() for name in names)
+logger = logging.getLogger("app.main")
 
 
 def validate_required_environment() -> None:
@@ -29,10 +22,10 @@ def validate_required_environment() -> None:
     settings = get_settings()
     missing: list[str] = []
 
-    if settings.database_enabled and not _has_env_value("POSTGRES_URL", "DATABASE_URL"):
+    if settings.database_enabled and not settings.database_url.strip():
         missing.append("POSTGRES_URL or DATABASE_URL")
 
-    if not settings.use_mock_llm and not _has_env_value("LLM_API_KEY", "OPENAI_API_KEY"):
+    if not settings.use_mock_llm and not settings.openai_api_key.strip():
         missing.append("LLM_API_KEY or OPENAI_API_KEY")
 
     if missing:
@@ -82,6 +75,14 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    @application.get("/health")
+    async def health() -> dict[str, str]:
+        return {"status": "ok"}
+
+    @application.get("/health/ready")
+    async def readiness() -> dict[str, str]:
+        return {"status": "ok"}
 
     application.include_router(api_router)
     return application

@@ -1,24 +1,6 @@
+version: "3.9"
+
 services:
-  api:
-    build:
-      context: .
-      target: api
-    ports:
-      - "8000:8000"
-    env_file: .env
-    depends_on:
-      - postgres
-      - redis
-
-  worker:
-    build:
-      context: .
-      target: worker
-    env_file: .env
-    depends_on:
-      - postgres
-      - redis
-
   postgres:
     image: pgvector/pgvector:pg16
     environment:
@@ -29,6 +11,37 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U govflow -d govflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    mem_limit: 1g
+    cpus: 0.5
+    networks:
+      backend:
+        aliases:
+          - postgres
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrantdata:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:6333/collections"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    mem_limit: 1g
+    cpus: 0.5
+    networks:
+      backend:
+        aliases:
+          - qdrant
 
   redis:
     image: redis:7-alpine
@@ -37,7 +50,64 @@ services:
       - "6379:6379"
     volumes:
       - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    mem_limit: 512m
+    cpus: 0.25
+    networks:
+      backend:
+        aliases:
+          - redis
+
+  api:
+    build:
+      context: .
+      target: api
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    mem_limit: 1g
+    cpus: 0.5
+    networks:
+      backend:
+        aliases:
+          - api
+
+  worker:
+    build:
+      context: .
+      target: worker
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    mem_limit: 1g
+    cpus: 0.5
+    networks:
+      backend:
+        aliases:
+          - worker
+
+networks:
+  backend:
+    driver: bridge
 
 volumes:
   pgdata:
+  qdrantdata:
   redisdata:
