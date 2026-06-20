@@ -19,10 +19,10 @@ settings = get_settings()
 # same model used while storing
 model = LazySentenceTransformer(settings.rag_embedding_model)
 
-
-client = QdrantClient(
-    path=settings.rag_qdrant_path
-)
+if settings.qdrant_url.strip():
+    client = QdrantClient(url=settings.qdrant_url)
+else:
+    client = QdrantClient(path=settings.rag_qdrant_path)
 
 
 collection_name = settings.rag_collection_name
