@@ -1,0 +1,43 @@
+services:
+  api:
+    build:
+      context: .
+      target: api
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+
+  worker:
+    build:
+      context: .
+      target: worker
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: govflow
+      POSTGRES_USER: govflow
+      POSTGRES_PASSWORD: devpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+volumes:
+  pgdata:
+  redisdata:
