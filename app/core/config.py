@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -75,7 +74,7 @@ class Settings(BaseSettings):
 def _load_env_alias(*names: str) -> str | None:
     for name in names:
         value = os.getenv(name)
-        if value is not None:
+        if value is not None and value.strip():
             return value
     return None
 
