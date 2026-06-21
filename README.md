@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # GovFlow AI
 
 Production-grade government document classification and routing engine.
@@ -16,15 +15,28 @@ docker compose up -d postgres   # optional: persistence
 
 Set `DATABASE_ENABLED=true` in `.env` to persist documents, decisions, and audit logs.
 
-## Documentation
+## Architecture
 
-| Document | Path |
-| --- | --- |
-| PRD v2.0 | `../govai/prd.pdf` |
-| TRD v2.0 | [`docs/TRD-GOVFLOW-001.md`](docs/TRD-GOVFLOW-001.md) |
-| 90-Day Roadmap | [`ROADMAP.md`](ROADMAP.md) |
+- **API Gateway** — request ID and trace ID injection, request validation, error handling.
+- **Pipeline Engine** — central orchestration for security, retrieval, LLM routing, evaluation, and audit.
+- **Security / PII Guard** — redact sensitive content before model calls.
+- **Retrieval** — Qdrant-based RAG context lookup with chunk reranking.
+- **Observability** — OpenTelemetry tracing, structured logging, latency and token metrics.
+- **Evaluation** — answer groundedness and hallucination scoring.
+- **Audit Log** — persisted trace records for each request and response.
 
-## Test
+## Request lifecycle
+
+1. Client submits `POST /api/v1/process`
+2. Gateway assigns `trace_id` and starts tracing span
+3. Pipeline sanitizes PII with the security guard
+4. Retriever fetches Qdrant context and reranks chunks
+5. LLM router selects the provider and generates an answer
+6. Evaluation scores are computed and attached to the response
+7. Audit record is persisted with latency, tokens, and scores
+8. Response is returned with `trace_id`
+
+## Testing
 
 ```powershell
 .\venv\Scripts\pytest tests\ -v
@@ -33,55 +45,68 @@ Set `DATABASE_ENABLED=true` in `.env` to persist documents, decisions, and audit
 
 ### 🧪 Testing Strategy
 
-**Framework:** `pytest`
-**Mocking:** `unittest.mock` for API dependency injection.
-**CI/CD:** Automated testing pipeline on every push.
+- **Framework:** `pytest`
+- **Mocking:** `unittest.mock` for API dependency injection
+- **CI/CD:** automated tests on every push
 
-## Project Structure
+## Project structure
 
 ```text
 app/
-├── main.py              # FastAPI entrypoint
-├── api/v1/process.py    # POST /api/v1/process, GET /api/v1/process/{trace_id}
-├── api/v1/history.py    # GET /api/v1/history
-├── db/models.py         # SQLModel: documents, decisions, audit_logs
-├── schemas/process.py   # Pydantic v2 request/response
-├── services/            # pipeline, llm
-├── security/presidio.py # PII sanitization
-├── resilience/          # pybreaker, tenacity
-└── tasks/               # Celery workers
-alembic/                 # DB migrations (Phase 4)
-tests/
-├── test_process.py
-├── test_phase4_db.py
-└── test_eval.py         # Golden Test Set evaluator
-eval/
-└── golden_test_set.jsonl
+├── main.py
+├── api/v1/
+│   ├── process.py
+│   ├── history.py
+│   └── endpoints/
+├── core/
+│   ├── config.py
+│   ├── logging.py
+│   ├── metrics.py
+│   └── tracing.py
+├── gateway/
+│   └── middleware.py
+├── pipeline/
+│   ├── context.py
+│   └── engine.py
+├── services/
+│   ├── audit/
+│   │   └── logger.py
+│   ├── evaluation/
+│   │   ├── evaluator.py
+│   │   ├── groundedness.py
+│   │   └── hallucination.py
+│   ├── llm/
+│   │   ├── __init__.py
+│   │   ├── fallback.py
+│   │   ├── model_router.py
+│   │   └── router.py
+│   ├── rag/
+│   │   ├── retriever.py
+│   │   └── reranker.py
+│   ├── security/
+│   │   └── pii_guard.py
+│   └── audit/
+│       └── logger.py
+├── db/
+│   ├── models.py
+│   ├── repositories/
+│   └── session.py
+├── schemas/
+└── tests/
 ```
-=======
-#CivicOs
->AI-powered workflow automation engine for government and public sector document triage, classification, and routing.
 
-**Overview** 
->CiviOs is a production-grade ai pipeline designed to transform unstructured citizens submissions - such as complaints, >reports, and forms - into structured , actionable data. By utilizing Fastapi, Pydantic validation, and llm powered >reasoning, CiviOs enables government agencies to reduce manual triage overhead and ensure consistent , auditable decision -> making
+## Documentation
 
-**Core features**
-- **INTELLIGENT TRIANGLE :** Automates categorization (complaint, request, report) and priority scoring (low to critical).
-- **STRUCTURED OUTPUT   :** Uses instructor  and pydantic to ensure the llm returns valid , non-hallucinated JSON.
-- **AUDIT-READY         :** Every decision is logged with confidence scores , reasoning traces, and processing metrices.
-- **PERFORMANCE FOCUSED :** Built for sub-3s latency with a cost -efficient architecture.
+| Document | Path |
+| --- | --- |
+| PRD v2.0 | `../govai/prd.pdf` |
+| TRD v2.0 | [`docs/TRD-GOVFLOW-001.md`](docs/TRD-GOVFLOW-001.md) |
+| 90-Day Roadmap | [`ROADMAP.md`](ROADMAP.md) |
 
-**ARCHITECTURE** 
-1. **INGESTION   :** Raw text input via REST API
-2. **AI-ENGINE    :** LLM-based analysis with strict schema enforcemnt .
-3. **PERSISTENCE :** PostgreSQL audit logging for all decisions.
-4. **MONITORING  :** Streamlit dashboard for real-time triage oversight.
+## Tech stack
 
-**tech stack**
-- **BACKEND        :** Python 3.11,FastAPI,Pydantic
-- **AI             :** OpenAPI, instructor
-- **DATABASE       :** PostgreSQL
-- **INFRASTRUCTURE :** Docker, Render/Railway
-
-
->>>>>>> 4bf825acc599aae423884cfc4ea3a134144365db
+- **Backend:** Python 3.11, FastAPI, Pydantic
+- **AI:** OpenAI / mock classifier
+- **Database:** PostgreSQL
+- **Observability:** OpenTelemetry, structured JSON logging
+- **Infrastructure:** Docker, Docker Compose

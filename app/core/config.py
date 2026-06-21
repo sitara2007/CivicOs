@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     api_prefix: str = "/api/v1"
 
     database_url: str = Field(
-        "postgresql+asyncpg://govflow:devpassword@localhost:5432/govflow",
+        "",
         env=["DATABASE_URL", "POSTGRES_URL"],
     )
     database_enabled: bool = True

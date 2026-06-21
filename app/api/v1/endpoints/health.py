@@ -21,17 +21,10 @@ def _health_payload(status: str) -> dict[str, str]:
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
-
-@router.get("/health", include_in_schema=False)
-async def health() -> dict[str, str]:
-    return _health_payload("ok")
-
-
-@router.get("/health/live", tags=["health"])
+@router.get("/health/live", tags=["health"], operation_id="health_liveness")
 async def liveness() -> dict[str, str]:
     return _health_payload("alive")
 
-
-@router.get("/health/ready", tags=["health"])
+@router.get("/health/ready", tags=["health"], operation_id="health_readiness")
 async def readiness() -> dict[str, str]:
     return _health_payload("ready")

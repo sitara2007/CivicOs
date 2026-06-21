@@ -16,7 +16,7 @@ from app.schemas.process import (
     SourceType,
 )
 from app.services.pipeline import PipelineResult, PipelineService
-from app.services.repository import DocumentRepository
+from app.db.repositories.document_repo import DocumentRepository
 
 logger = logging.getLogger(__name__)
 
