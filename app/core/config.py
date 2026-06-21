@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 
 from pydantic import Field
@@ -9,7 +10,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=None if os.getenv("PYTEST_CURRENT_TEST") else ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     environment: str = "development"
     log_level: str = "INFO"
