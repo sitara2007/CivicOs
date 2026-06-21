@@ -11,28 +11,39 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=None if os.getenv("PYTEST_CURRENT_TEST") else ".env",
+        env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )
 
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls,
+        init_settings,
+        env_settings,
+        dotenv_settings,
+        file_secret_settings,
+    ):
+        if os.getenv("PYTEST_CURRENT_TEST") or os.getenv("SKIP_DOTENV") == "true":
+            return init_settings, env_settings, file_secret_settings
+        return init_settings, env_settings, dotenv_settings, file_secret_settings
+
     environment: str = "development"
+
     log_level: str = "INFO"
     port: int = 8000
     service_name: str = "CivicOs"
     service_version: str = "0.1.0"
     api_prefix: str = "/api/v1"
 
-    database_url: str = Field(
-        "",
-        env=["DATABASE_URL", "POSTGRES_URL"],
-    )
+    database_url: str = ""
     database_enabled: bool = True
     redis_url: str = "redis://localhost:6379/0"
     celery_broker_url: str | None = None
-    qdrant_url: str = Field("", env=["QDRANT_URL"])
+    qdrant_url: str = ""
 
-    openai_api_key: str = Field("", env=["OPENAI_API_KEY", "LLM_API_KEY"])
+    openai_api_key: str = ""
     openai_model: str = "gpt-4o-mini"
     openai_embedding_model: str = "text-embedding-3-small"
 
@@ -61,6 +72,27 @@ class Settings(BaseSettings):
         return self.celery_broker_url or self.redis_url
 
 
+def _load_env_alias(*names: str) -> str | None:
+    for name in names:
+        value = os.getenv(name)
+        if value is not None:
+            return value
+    return None
+
+
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    overrides: dict[str, str] = {}
+    database_url = _load_env_alias("DATABASE_URL", "POSTGRES_URL")
+    if database_url is not None:
+        overrides["database_url"] = database_url
+
+    qdrant_url = _load_env_alias("QDRANT_URL")
+    if qdrant_url is not None:
+        overrides["qdrant_url"] = qdrant_url
+
+    openai_api_key = _load_env_alias("OPENAI_API_KEY", "LLM_API_KEY")
+    if openai_api_key is not None:
+        overrides["openai_api_key"] = openai_api_key
+
+    return Settings(**overrides)
