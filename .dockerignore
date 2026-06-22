@@ -1,0 +1,44 @@
+# Python runtime artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments should never be copied into image build context
+.venv/
+venv/
+env/
+ENV/
+
+# Git metadata and local SCM files
+.git
+.gitignore
+
+# Local secrets and environment configuration
+.env
+.env.*
+*.env
+
+# IDE/editor temporary files
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+
+# Build / test artifacts and caches
+.pytest_cache/
+.mypy_cache/
+coverage.xml
+htmlcov/
+dist/
+build/
+*.egg-info/
+pip-wheel-metadata/
+
+# Data, logs, and runtime state
+data/
+*.sqlite3
+*.db
+
+# Optional: ignore local Docker compose overrides if not needed in build context
+docker-compose.override.yml

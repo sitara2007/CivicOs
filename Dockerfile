@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # 2. Builder Stage
-FROM base AS builder
+FROM base AS worker
 # Use shell directly to avoid issues
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential libpq-dev \
@@ -26,6 +26,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* && \
     useradd --create-home --shell /usr/sbin/nologin appuser
 
-COPY --from=builder /opt/venv /opt/venv
+COPY --from=worker /opt/venv /opt/venv
 COPY app ./app
 USER appuser
