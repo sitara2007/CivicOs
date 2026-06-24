@@ -57,3 +57,22 @@ def test_retrieve_returns_empty_list_when_no_points() -> None:
         chunks = retrieve("Empty result query", top_k=3)
 
     assert chunks == []
+
+
+def test_retrieve_falls_back_to_pgvector_when_qdrant_times_out() -> None:
+    fallback_chunks = [{"text": "Fallback document.", "score": 0.55}]
+
+    with patch(
+        "app.services.rag.retriever.model.encode",
+        return_value=Mock(tolist=lambda: [0.7, 0.8, 0.9]),
+    ), patch(
+        "app.services.rag.retriever.client.query_points",
+        side_effect=TimeoutError("qdrant timed out"),
+    ), patch(
+        "app.services.rag.retriever._pgvector_bm25_fallback",
+        return_value=fallback_chunks,
+    ) as mock_fallback:
+        chunks = retrieve("Fallback query", top_k=2)
+
+    assert chunks == fallback_chunks
+    mock_fallback.assert_called_once_with("Fallback query", 2)
