@@ -32,7 +32,10 @@ _RESERVED_LOG_ATTRS = {
     "stack_info",
     "thread",
     "threadName",
+    "taskName",
 }
+
+_JSON_HANDLER_MARKER = "_civicos_json_handler"
 
 
 class JsonFormatter(logging.Formatter):
@@ -56,14 +59,34 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(payload, default=str, separators=(",", ":"))
 
 
+def _normalize_log_level(log_level: str | int) -> int:
+    if isinstance(log_level, int):
+        return log_level
+
+    if isinstance(log_level, str):
+        normalized = log_level.strip().upper()
+        if normalized in logging._nameToLevel:
+            return logging._nameToLevel[normalized]
+        if normalized.isdigit():
+            return int(normalized)
+
+    return logging.INFO
+
+
 def configure_logging(log_level: str = "INFO") -> None:
     """Configure root logging once for JSON stdout output."""
 
     root_logger = logging.getLogger()
-    root_logger.handlers.clear()
-    root_logger.setLevel(log_level.upper())
+    root_logger.setLevel(_normalize_log_level(log_level))
+
+    root_logger.handlers = [
+        handler
+        for handler in root_logger.handlers
+        if not getattr(handler, _JSON_HANDLER_MARKER, False)
+    ]
 
     handler = logging.StreamHandler(sys.stdout)
+    setattr(handler, _JSON_HANDLER_MARKER, True)
     handler.setFormatter(JsonFormatter())
     root_logger.addHandler(handler)
 

@@ -1,0 +1,36 @@
+Client
+  |
+  v
+FastAPI API
+  - app/main.py
+  - app/api/router.py
+  - app/api/v1/process.py
+  |
+  v
+Pipeline Layer
+  - app/services/pipeline.py
+  - normalizes text
+  - enforces token limit
+  - masks PII
+  - retrieves RAG context
+  - calls LLM classifier
+  |
+  +--> PII/Security
+  |     - app/security/presidio.py
+  |
+  +--> RAG / Vector Search
+  |     - app/services/rag/retriever.py
+  |     - Qdrant
+  |
+  +--> LLM
+  |     - app/services/llm/__init__.py
+  |     - OpenAI or mock classifier
+  |
+  +--> Persistence
+  |     - PostgreSQL / pgvector
+  |     - app/db/session.py
+  |
+  +--> Async Worker, optional
+        - Celery
+        - Redis broker
+        - app/tasks/process_document.py
