@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -53,6 +52,7 @@ class Settings(BaseSettings):
     rag_collection_name: str = "gov_docs"
     rag_top_k: int = 3
     rag_context_max_chars: int = 4_000
+    rag_qdrant_timeout_ms: int = 300
 
     max_agentic_hops: int = 5
     review_confidence_threshold: float = 0.75

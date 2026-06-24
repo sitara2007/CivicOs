@@ -43,6 +43,7 @@ def test_retrieve_returns_chunks_from_qdrant() -> None:
         collection_name="gov_docs",
         query=[0.1, 0.2, 0.3],
         limit=2,
+        timeout=0.3,
     )
 
 
@@ -53,7 +54,38 @@ def test_retrieve_returns_empty_list_when_no_points() -> None:
     ), patch(
         "app.services.rag.retriever.client.query_points",
         return_value=DummyResults(points=[]),
-    ):
+    ) as mock_query:
         chunks = retrieve("Empty result query", top_k=3)
 
     assert chunks == []
+    mock_query.assert_called_once_with(
+        collection_name="gov_docs",
+        query=[0.4, 0.5, 0.6],
+        limit=3,
+        timeout=0.3,
+    )
+
+
+def test_retrieve_falls_back_to_pgvector_when_qdrant_times_out() -> None:
+    fallback_chunks = [{"text": "Fallback document.", "score": 0.55}]
+
+    with patch(
+        "app.services.rag.retriever.model.encode",
+        return_value=Mock(tolist=lambda: [0.7, 0.8, 0.9]),
+    ), patch(
+        "app.services.rag.retriever.client.query_points",
+        side_effect=TimeoutError("qdrant timed out"),
+    ) as mock_query, patch(
+        "app.services.rag.retriever._pgvector_bm25_fallback",
+        return_value=fallback_chunks,
+    ) as mock_fallback:
+        chunks = retrieve("Fallback query", top_k=2)
+
+    assert chunks == fallback_chunks
+    mock_query.assert_called_once_with(
+        collection_name="gov_docs",
+        query=[0.7, 0.8, 0.9],
+        limit=2,
+        timeout=0.3,
+    )
+    mock_fallback.assert_called_once_with("Fallback query", 2)

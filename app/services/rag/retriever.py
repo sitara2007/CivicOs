@@ -1,7 +1,12 @@
+from __future__ import annotations
+
+from typing import Any
+
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
 
 from app.core.config import get_settings
+from app.db.vector_clients.pgvector_client import pgvector_bm25_fallback
 
 
 class LazySentenceTransformer:
@@ -28,32 +33,29 @@ else:
 collection_name = settings.rag_collection_name
 
 
-def retrieve(query, top_k=3):
-
-    # convert question into vector
-    query_vector = model.encode(
-        query
-    ).tolist()
+def _pgvector_bm25_fallback(query: str, top_k: int) -> list[dict[str, Any]]:
+    return pgvector_bm25_fallback(query=query, top_k=top_k)
 
 
-    results = client.query_points(
-        collection_name=collection_name,
-        query=query_vector,
-        limit=top_k
-    )
+def retrieve(query: str, top_k: int = 3) -> list[dict[str, Any]]:
+    query_vector = model.encode(query).tolist()
+    timeout_seconds = max(settings.rag_qdrant_timeout_ms, 1) / 1000.0
 
-
-    chunks = []
-
-    for point in results.points:
-
-        chunks.append(
-            {
-                "text": point.payload["text"],
-                "score": point.score
-            }
+    try:
+        results = client.query_points(
+            collection_name=collection_name,
+            query=query_vector,
+            limit=top_k,
+            timeout=timeout_seconds,
         )
+    except Exception as exc:
+        if isinstance(exc, TimeoutError) or "timeout" in str(exc).lower():
+            return _pgvector_bm25_fallback(query, top_k)
+        raise
 
+    chunks: list[dict[str, Any]] = []
+    for point in getattr(results, "points", []):
+        chunks.append({"text": point.payload["text"], "score": point.score})
 
     return chunks
 
