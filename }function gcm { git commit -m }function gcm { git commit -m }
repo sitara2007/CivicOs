@@ -1,0 +1,16 @@
+* [33m1df5f9a8[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m feat: add requirements.txt for dependency management
+* [33m58353cbb[m[33m ([m[1;31morigin/master[m[33m)[m refactor: simplify FastAPI app initialization and remove unnecessary pytest condition; update test imports
+* [33m09429e0d[m feat: add environment variable handling for OpenAI API keys and update app initialization for pytest compatibility; refactor test imports
+* [33m56bddeea[m feat: implement BM25 fallback for document retrieval and enhance retrieve function with timeout handling
+* [33mc0075e79[m feat: enhance environment variable handling in config.py and add custom sources method
+* [33m56754a46[m fix: import os in config.py and update model_config for environment handling
+* [33md502e78e[m feat: update Dockerfile, README, and health endpoints; add PyTorch dependency
+*   [33m3c70006a[m fix: resolve merge conflicts between local and remote
+[32m|[m[33m\[m  
+[32m|[m * [33m4bf825ac[m Update README.md
+[32m|[m * [33mab937f20[m Enhance README with detailed project information
+[32m|[m * [33m55cb1b01[m Initial commit
+* [33m279eaf4d[m fix: rename typo in metrics.py
+* [33md0f6d167[m feat: implement RAG services, embedding logic, and LLM classifiers
+* [33ma2e426a5[m feat: setup core infra, database, and resilience patterns
+* [33m6ec38a6e[m chore: ignore environment files
