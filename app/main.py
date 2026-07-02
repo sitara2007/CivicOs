@@ -98,10 +98,4 @@ def create_app() -> FastAPI:
 
 
 
-# Avoid creating the FastAPI app at import time during pytest runs to prevent
-# startup-side effects (like environment validation) from firing when tests
-# import `validate_required_environment` directly.
-if os.getenv("PYTEST_CURRENT_TEST") is None:
-    app = create_app()
-else:
-    app = None
+app = create_app()

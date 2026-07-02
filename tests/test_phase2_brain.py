@@ -23,8 +23,6 @@ from app.security import presidio as presidio_module
 
 def _presidio_available() -> bool:
     try:
-        import presidio_analyzer  # noqa: F401
-
         return True
     except ImportError:
         return False
