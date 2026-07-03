@@ -6,7 +6,6 @@ import contextvars
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 from typing import Any
-
 from loguru import logger
 from opentelemetry import metrics, trace
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
