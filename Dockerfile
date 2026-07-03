@@ -28,4 +28,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /opt/venv /opt/venv
 COPY app ./app
-USER appuser
+USER appuser# Copy main.py (Tumne shayad missed kar diya tha)
+COPY main.py .
+
+# Expose port
+EXPOSE 8000
+
+# Command to run (Non-root user ke liye best practice)
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

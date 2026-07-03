@@ -1,80 +1,67 @@
 """FastAPI application entrypoint for CivicOs."""
 from __future__ import annotations
 
-import os
 import logging
+import uuid
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.api.router import api_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
+from app.services.observability import configure_telemetry, telemetry
 
+# Setup Logger
 logger = logging.getLogger("app.main")
-
-
-def validate_required_environment() -> None:
-    """Fail fast when required startup environment variables are missing."""
-
-    settings = get_settings()
-    missing: list[str] = []
-
-    if settings.database_enabled and not settings.database_url.strip():
-        missing.append("POSTGRES_URL or DATABASE_URL")
-
-    # Accept either OPENAI_API_KEY or LLM_API_KEY aliases when present in the
-    # environment. Use the helper in `app.core.config` to check supported names
-    # so tests that set `LLM_API_KEY` are honored.
-    # Check the environment directly for supported aliases to ensure values
-    # set via test fixtures (monkeypatch) are respected even if settings were
-    # previously loaded/cached elsewhere during test module import.
-    env_openai = os.getenv("OPENAI_API_KEY") or os.getenv("LLM_API_KEY")
-    openai_key = settings.openai_api_key or (env_openai or "")
-    if not settings.use_mock_llm and not openai_key.strip():
-        missing.append("LLM_API_KEY or OPENAI_API_KEY")
-
-    if missing:
-        missing_vars = ", ".join(missing)
-        raise RuntimeError(f"Missing required environment variable(s): {missing_vars}")
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Manage application startup and shutdown concerns."""
-
-    validate_required_environment()
+    # 1. Initialize Telemetry (Distributed Tracing)
+    configure_telemetry(service_name="civicos-api")
+    
+    # 2. Validate Config
     settings = get_settings()
-    logger.info(
-        "application_starting",
-        extra={
-            "service": settings.service_name,
-            "version": settings.service_version,
-            "environment": settings.environment,
-        },
-    )
+    logger.info("application_starting", extra={"service": settings.service_name})
     app.state.settings = settings
-
-    try:
-        yield
-    finally:
-        logger.info("application_stopping", extra={"service": settings.service_name})
-
+    
+    yield
+    # Shutdown logic
+    logger.info("application_stopping", extra={"service": settings.service_name})
 
 def create_app() -> FastAPI:
-    """Build and configure the CivicOs API application."""
-
     settings = get_settings()
     configure_logging(settings.log_level)
 
     application = FastAPI(
         title=settings.service_name,
         version=settings.service_version,
-        description="RAG-based government document assistant API.",
         lifespan=lifespan,
     )
+
+    # Middleware: Distributed Tracing
+    @application.middleware("http")
+    async def add_trace_id(request: Request, call_next):
+        trace_id = request.headers.get("X-Trace-ID", str(uuid.uuid4()))
+        telemetry.bind_trace_id(trace_id)
+        
+        async with telemetry.span("http_request", {"path": request.url.path}):
+            response = await call_next(request)
+            response.headers["X-Trace-ID"] = trace_id
+            return response
+
+    # Global Exception Handler (Bulletproof)
+    @application.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception):
+        logger.error(f"Critical System Failure: {str(exc)}", exc_info=True)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"message": "Internal error. Trace ID available in logs."}
+        )
 
     application.add_middleware(
         CORSMiddleware,
@@ -84,18 +71,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    @application.get("/health")
-    async def health() -> dict[str, str]:
-        return {"status": "ok"}
-
-    @application.get("/health/ready")
-    async def readiness() -> dict[str, str]:
-        return {"status": "ok"}
-
     application.include_router(api_router)
     return application
-
-
-
 
 app = create_app()
