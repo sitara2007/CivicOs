@@ -1,0 +1,192 @@
+version: 1
+
+# Promptfoo evaluation config for CivicOs
+# https://promptfoo.dev/docs/configuration
+
+defaults:
+  llm:
+    provider: openai
+    model: gpt-4o-mini
+    max_tokens: 1024
+    temperature: 0.0
+
+prompts:
+  - id: llm_classification
+    description: "Classification prompt for CivicOs decision output"
+    type: chat
+    input:
+      - name: user_text
+        description: "Redacted document text to classify"
+      - name: policy_context
+        description: "Optional retrieved RAG context from CivicOs"
+    template:
+      system: |
+        You are CivicOs, a government document classifier and routing assistant.
+        Analyze the redacted document and return a JSON object with keys: category, priority, department, confidence.
+      user: |
+        Document:
+        {{user_text}}
+
+        Context:
+        {{policy_context}}
+
+  - id: pii_redaction_positive
+    description: "Verify PII redaction is applied to sensitive documents"
+    type: chat
+    input:
+      - name: original_text
+        description: "Document text containing sensitive PII"
+    template:
+      system: |
+        You are a PII redaction validator. Check whether the output redacts sensitive data.
+      user: |
+        Document:
+        {{original_text}}
+
+        Does this document contain any PII that should be redacted before sending to a model? Answer YES or NO and explain which entities should be masked.
+
+  - id: pii_redaction_negative
+    description: "Verify no false positive redaction on non-sensitive text"
+    type: chat
+    input:
+      - name: original_text
+        description: "Document text with no PII"
+    template:
+      system: |
+        You are a PII redaction validator.
+      user: |
+        Document:
+        {{original_text}}
+
+        Does this document contain any PII? Answer YES or NO and explain.
+
+  - id: rag_retrieval_quality
+    description: "Judge retrieval results for relevance to the query"
+    type: chat
+    input:
+      - name: query
+        description: "Search query from CivicOs"
+      - name: retrieved_snippets
+        description: "RAG chunks returned by Qdrant"
+    template:
+      system: |
+        You are an RAG relevance judge. Score the retrieved snippets for usefulness to answer the query.
+      user: |
+        Query:
+        {{query}}
+
+        Retrieved snippets:
+        {{retrieved_snippets}}
+
+        Score each snippet 1-5 and explain whether it is relevant.
+
+  - id: hallucination_judge
+    description: "Use LLM-as-a-Judge to verify answer grounding"
+    type: chat
+    input:
+      - name: answer
+        description: "Model answer returned by CivicOs"
+      - name: evidence
+        description: "Context or source content used for the answer"
+    template:
+      system: |
+        You are a judgement assistant that verifies if the answer is grounded in the provided evidence.
+      user: |
+        Answer:
+        {{answer}}
+
+        Evidence:
+        {{evidence}}
+
+        Determine whether the answer is fully supported by the evidence. Respond with:
+        - verdict: grounded / hallucinated
+        - explanation: brief reason
+
+scenarios:
+  - id: PII_REDACTION
+    description: "End-to-end PII redaction evaluation"
+    prompt_ids:
+      - pii_redaction_positive
+      - pii_redaction_negative
+    tests:
+      - id: pii_redaction.1
+        name: "Sensitive text should be identified"
+        input:
+          original_text: "My name is Priyanshu Kumar and my PAN is ABCDE1234F. Please approve my license."
+        expected:
+          output_contains:
+            - "YES"
+            - "PAN"
+      - id: pii_redaction.2
+        name: "Non-sensitive text should not be flagged"
+        input:
+          original_text: "The city council meeting will happen on Monday to discuss waste management."
+        expected:
+          output_contains:
+            - "NO"
+  - id: RAG_RETRIEVAL_QUALITY
+    description: "Quality checks for RAG retrieval context relevance"
+    prompt_ids:
+      - rag_retrieval_quality
+    tests:
+      - id: rag_retrieval.1
+        name: "Relevant snippet should score high"
+        input:
+          query: "What are the eligibility criteria for the housing subsidy?"
+          retrieved_snippets: |
+            1. "Applicants must be citizens with annual income below 5 lakhs..."
+            2. "The program is for senior citizens and low-income families."
+        expected:
+          output_contains:
+            - "5"
+            - "relevant"
+      - id: rag_retrieval.2
+        name: "Irrelevant snippet should score low"
+        input:
+          query: "How do I submit a complaint against municipal water quality?"
+          retrieved_snippets: |
+            1. "The festival parking rules are on page 5."
+            2. "The next train departs at 08:00 AM."
+        expected:
+          output_contains:
+            - "1"
+            - "not relevant"
+  - id: HALLUCINATION
+    description: "Judge hallucination risk for generated answers"
+    prompt_ids:
+      - hallucination_judge
+    tests:
+      - id: hallucination.1
+        name: "Grounded answer matches evidence"
+        input:
+          answer: "The subsidy requires citizens to have annual income below 5 lakhs and no existing government housing."
+          evidence: "Eligible applicants: annual income less than 5 lakhs; must not already own government housing."
+        expected:
+          output_contains:
+            - "grounded"
+      - id: hallucination.2
+        name: "Hallucinated answer is detected"
+        input:
+          answer: "The subsidy requires applicants to own a vehicle and pay a registration fee."
+          evidence: "No mention of vehicles or registration fees in the eligibility rules."
+        expected:
+          output_contains:
+            - "hallucinated"
+
+checks:
+  - id: llm_service_connection
+    type: api
+    request:
+      method: POST
+      url: "http://localhost:8000/api/v1/process"
+      headers:
+        Content-Type: application/json
+      body: |
+        {
+          "text": "Please classify this sample document for complaint routing and priority.",
+          "source_type": "text"
+        }
+    expected:
+      status_code: 200
+      json:
+        status: "completed"

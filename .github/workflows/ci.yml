@@ -2,14 +2,12 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-  test:
+  test-and-eval:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,24 +16,28 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip' # Pro Tip: Cache lagane se pipeline 2x fast ho jayegi
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          # Agar tum dev dependencies bhi install karna chahti ho:
-          # pip install pytest 
+          # Fix: Sirf cross-platform dependencies install karo, Windows specific ignore karo
+          Get-Content requirements.txt | Where-Object { $_ -notlike "*sys_platform*" } | Set-Content requirements_ci.txt
+          pip install -r requirements_ci.txt
+          pip install promptfoo pytest httpx safety ruff
 
-      - name: Run tests
+      - name: Run Unit Tests
         run: pytest tests --verbose
+
       - name: Security Scan
-        run: |
-          pip install safety
-          safety check -r requirements.txt
+        run: safety check -r requirements_ci.txt --full-report
+
       - name: Lint with Ruff
-        run: |
-          pip install ruff
-          ruff check .
+        run: ruff check . --output-format=github
+
       - name: Run AI Evaluations
-        run: pytest tests/evaluation/ --eval-only
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          # --assert-fail-fast ka matlab hai ki ek bhi test fail hua toh pipeline red ho jayegi
+          promptfoo eval -c tests/evaluation/promptfoo.yaml --assert-fail-fast
