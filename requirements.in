@@ -1,0 +1,8 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+qdrant-client>=1.9
+loguru>=0.7
+opentelemetry-sdk>=1.25.0
+opentelemetry-exporter-otlp>=1.25.0
+openai>=1.0
+sentence-transformers>=3.0
