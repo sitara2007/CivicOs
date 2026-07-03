@@ -28,4 +28,14 @@ jobs:
           # pip install pytest 
 
       - name: Run tests
-        run: pytest tests -q
+        run: pytest tests --verbose
+      - name: Security Scan
+        run: |
+          pip install safety
+          safety check -r requirements.txt
+      - name: Lint with Ruff
+        run: |
+          pip install ruff
+          ruff check .
+      - name: Run AI Evaluations
+        run: pytest tests/evaluation/ --eval-only

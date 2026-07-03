@@ -1,8 +1,6 @@
 """Prompt builders for LLM-backed document decisions."""
 
 from __future__ import annotations
-
-
 def build_classification_messages(redacted_text: str, policy_context: str = "") -> list[dict[str, str]]:
     context = policy_context.strip() or "No relevant policy context was retrieved."
     return [
