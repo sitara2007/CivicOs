@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: CI
 
 on:
@@ -11,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -21,16 +22,14 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # Fix: Sirf cross-platform dependencies install karo, Windows specific ignore karo
-          Get-Content requirements.txt | Where-Object { $_ -notlike "*sys_platform*" } | Set-Content requirements_ci.txt
-          pip install -r requirements_ci.txt
-          pip install promptfoo pytest httpx safety ruff
+          pip install -r requirements.txt
+          pip install promptfoo pytest httpx pip-audit ruff
 
       - name: Run Unit Tests
         run: pytest tests --verbose
 
-      - name: Security Scan
-        run: safety check -r requirements_ci.txt --full-report
+      - name: Security Scan (Dependencies)
+        run: pip-audit
 
       - name: Lint with Ruff
         run: ruff check . --output-format=github
@@ -39,5 +38,4 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          # --assert-fail-fast ka matlab hai ki ek bhi test fail hua toh pipeline red ho jayegi
           promptfoo eval -c tests/evaluation/promptfoo.yaml --assert-fail-fast

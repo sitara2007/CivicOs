@@ -17,24 +17,24 @@ Set `DATABASE_ENABLED=true` in `.env` to persist documents, decisions, and audit
 
 ## Architecture
 
-- **API Gateway** — request ID and trace ID injection, request validation, error handling.
-- **Pipeline Engine** — central orchestration for security, retrieval, LLM routing, evaluation, and audit.
-- **Security / PII Guard** — redact sensitive content before model calls.
-- **Retrieval** — Qdrant-based RAG context lookup with chunk reranking.
-- **Observability** — OpenTelemetry tracing, structured logging, latency and token metrics.
-- **Evaluation** — answer groundedness and hallucination scoring.
-- **Audit Log** — persisted trace records for each request and response.
+- **API Layer** — FastAPI request routing, trace ID injection, CORS, and global error handling.
+- **Pipeline Service** — orchestrates normalization, PII sanitization, optional RAG retrieval, LLM classification, and decision persistence.
+- **Security / PII Guard** — Microsoft Presidio-based sanitization with a regex fallback when Presidio is unavailable.
+- **Retrieval** — Qdrant RAG lookup for optional policy/context enrichment.
+- **Observability** — OpenTelemetry tracing and metrics with structured JSON logging.
+- **Evaluation** — offline groundedness and hallucination scoring components for model quality review.
+- **Persistence / Audit** — PostgreSQL-backed document, decision, redaction, and DLQ metadata storage.
 
 ## Request lifecycle
 
 1. Client submits `POST /api/v1/process`
-2. Gateway assigns `trace_id` and starts tracing span
-3. Pipeline sanitizes PII with the security guard
-4. Retriever fetches Qdrant context and reranks chunks
-5. LLM router selects the provider and generates an answer
-6. Evaluation scores are computed and attached to the response
-7. Audit record is persisted with latency, tokens, and scores
-8. Response is returned with `trace_id`
+2. FastAPI middleware binds a trace ID and adds it to response headers
+3. Pipeline normalizes text and sanitizes PII
+4. Optional RAG retrieval gathers policy context from Qdrant
+5. LLM service or mock classifier generates a document decision
+6. Completed decisions are saved to PostgreSQL, or failures are routed to DLQ
+7. Response returns status and `trace_id`; async requests may return `202 Accepted`
+8. `GET /api/v1/process/{trace_id}` polls persisted status and decision
 
 ## Testing
 
@@ -54,45 +54,41 @@ Set `DATABASE_ENABLED=true` in `.env` to persist documents, decisions, and audit
 ```text
 app/
 ├── main.py
-├── api/v1/
-│   ├── process.py
-│   ├── history.py
-│   └── endpoints/
+├── api/
+│   ├── router.py
+│   └── v1/
+│       ├── process.py
+│       ├── history.py
+│       └── endpoints/
 ├── core/
 │   ├── config.py
-│   ├── logging.py
-│   ├── metrics.py
-│   └── tracing.py
-├── gateway/
-│   └── middleware.py
-├── pipeline/
-│   ├── context.py
-│   └── engine.py
-├── services/
-│   ├── audit/
-│   │   └── logger.py
-│   ├── evaluation/
-│   │   ├── evaluator.py
-│   │   ├── groundedness.py
-│   │   └── hallucination.py
-│   ├── llm/
-│   │   ├── __init__.py
-│   │   ├── fallback.py
-│   │   ├── model_router.py
-│   │   └── router.py
-│   ├── rag/
-│   │   ├── retriever.py
-│   │   └── reranker.py
-│   ├── security/
-│   │   └── pii_guard.py
-│   └── audit/
-│       └── logger.py
+│   └── logging.py
 ├── db/
 │   ├── models.py
 │   ├── repositories/
 │   └── session.py
-├── schemas/
-└── tests/
+├── security/
+│   └── presidio.py
+├── services/
+│   ├── ai_infra.py
+│   ├── mock_classifier.py
+│   ├── observability.py
+│   ├── pipeline.py
+│   ├── process_service.py
+│   ├── rag/
+│   ├── llm/
+│   ├── audit/
+│   ├── evaluation/
+│   ├── cache/
+│   ├── embeddings/
+│   ├── pii/
+│   └── vector_db.py
+├── tasks/
+│   └── process_document.py
+├── utils/
+├── worker/
+│   └── celery_app.py
+└── __init__.py
 ```
 
 ## Documentation
@@ -105,7 +101,7 @@ app/
 
 ## Tech stack
 
-- **Backend:** Python 3.11, FastAPI, Pydantic
+- **Backend:** Python 3.12, FastAPI, Pydantic
 - **AI:** OpenAI / mock classifier
 - **Database:** PostgreSQL
 - **Observability:** OpenTelemetry, structured JSON logging
