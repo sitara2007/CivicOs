@@ -110,3 +110,39 @@ app/
 - **Database:** PostgreSQL
 - **Observability:** OpenTelemetry, structured JSON logging
 - **Infrastructure:** Docker, Docker Compose
+- 
+## CivicOs Architecture
+```mermaid
+graph TD
+    subgraph Client_Layer
+        Client[Client Request]
+    end
+
+    subgraph API_Gateway
+        API[FastAPI Gateway]
+        MW[Middleware: Auth/TraceID]
+    end
+
+    subgraph Core_Pipeline
+        Pipe[Pipeline Service]
+        PII[Presidio Sanitization]
+        RAG[Qdrant RAG Context]
+        LLM[Decision Engine]
+    end
+
+    subgraph Persistence_Layer
+        DB[(PostgreSQL)]
+        Audit[Hash-Chain Auditor]
+    end
+
+    subgraph Async_Worker
+        Celery[Celery/Background Task]
+        DLQ[Dead Letter Queue]
+    end
+
+    Client --> API --> MW --> Pipe
+    Pipe --> PII --> RAG --> LLM
+    LLM --> Audit --> DB
+    Pipe --> Celery --> DB
+    Celery -- Failure --> DLQ
+    DB --> Response[HTTP 200/202]
