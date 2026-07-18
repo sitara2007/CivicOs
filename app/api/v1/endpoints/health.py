@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter
 
@@ -18,12 +18,14 @@ def _health_payload(status: str) -> dict[str, str]:
         "service": settings.service_name,
         "version": settings.service_version,
         "environment": settings.environment,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
+
 
 @router.get("/health/live", tags=["health"], operation_id="health_liveness")
 async def liveness() -> dict[str, str]:
     return _health_payload("alive")
+
 
 @router.get("/health/ready", tags=["health"], operation_id="health_readiness")
 async def readiness() -> dict[str, str]:

@@ -10,11 +10,19 @@ from openai import OpenAI
 
 from app.core.config import get_settings
 from app.schemas.process import DecisionOutput, SourceType
-from app.services.guardrails.input_guard import GuardResult, InputGuard, InputValidationError
+from app.services.guardrails.input_guard import (
+    InputGuard,
+    InputValidationError,
+)
 from app.services.guardrails.output_guard import OutputGuard, OutputValidationError
 from app.services.llm.prompts import build_classification_messages
 from app.services.mock_classifier import classify_mock
-from app.services.observability import TelemetryClient, configure_logging, configure_telemetry, telemetry
+from app.services.observability import (
+    TelemetryClient,
+    configure_logging,
+    configure_telemetry,
+    telemetry,
+)
 from app.services.rag.retriever import retrieve
 
 
@@ -49,7 +57,9 @@ class AsyncOpenAIAdapter:
             return classify_mock(redacted_text).model_dump(), 1, 1
 
         client = OpenAI(api_key=self._settings.openai_api_key)
-        messages = build_classification_messages(redacted_text=redacted_text, policy_context=policy_context)
+        messages = build_classification_messages(
+            redacted_text=redacted_text, policy_context=policy_context
+        )
 
         def _call() -> tuple[dict[str, Any], int, int]:
             response = client.chat.completions.create(
@@ -106,8 +116,12 @@ class AIInferenceService:
 
                 policy_context = ""
                 if self._settings.rag_enabled:
-                    chunks = await self._retriever.retrieve(guard_result.text, self._settings.rag_top_k)
-                    policy_context = "\n\n".join(chunk.get("text", "") for chunk in chunks if chunk.get("text"))
+                    chunks = await self._retriever.retrieve(
+                        guard_result.text, self._settings.rag_top_k
+                    )
+                    policy_context = "\n\n".join(
+                        chunk.get("text", "") for chunk in chunks if chunk.get("text")
+                    )
 
                 raw_payload, prompt_tokens, response_tokens = await self._llm_adapter.classify(
                     guard_result.text,

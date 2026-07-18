@@ -8,7 +8,9 @@ from app.core.config import get_settings
 from app.main import validate_required_environment
 
 
-def test_validate_required_environment_requires_database_url(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_validate_required_environment_requires_database_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("DATABASE_ENABLED", "true")
     monkeypatch.delenv("DATABASE_URL", raising=False)
     monkeypatch.delenv("POSTGRES_URL", raising=False)

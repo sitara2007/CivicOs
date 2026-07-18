@@ -47,7 +47,7 @@ presidio_breaker = pybreaker.CircuitBreaker(
 )
 
 
-def with_openai_breaker(func: Callable[P, R]) -> Callable[P, R]:
+def with_openai_breaker[**P, R](func: Callable[P, R]) -> Callable[P, R]:
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         return openai_breaker.call(func, *args, **kwargs)
 

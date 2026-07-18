@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,10 +16,10 @@ router = APIRouter(prefix="/api/v1", tags=["history"])
 
 @router.get("/history", response_model=HistoryResponse)
 async def get_history(
+    session: Annotated[AsyncSession | None, Depends(get_db_session)],
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     status: str | None = Query(None, description="Filter by status, e.g. dlq"),
-    session: AsyncSession | None = Depends(get_db_session),
 ) -> HistoryResponse:
     if session is None:
         raise HTTPException(status_code=503, detail="Database persistence is disabled")

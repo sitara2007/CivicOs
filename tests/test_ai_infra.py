@@ -1,23 +1,28 @@
 from __future__ import annotations
 
-import pytest
 from uuid import uuid4
 
-from app.schemas.process import DocumentCategory, DecisionOutput, Priority, SourceType
+import pytest
+
+from app.schemas.process import DocumentCategory, SourceType
 from app.services.ai_infra import AIInferenceResult, AIInferenceService
 from app.services.guardrails.output_guard import OutputValidationError
 
 
 class DummyOpenAIAdapter:
     async def classify(self, redacted_text: str, policy_context: str, trace_id: str):
-        return {
-            "category": "tax",
-            "priority": "medium",
-            "department": "finance",
-            "confidence": 0.82,
-            "decision_rationale": "The document appears to be a request for tax assistance.",
-            "summary": "Tax assistance request",
-        }, 4, 2
+        return (
+            {
+                "category": "tax",
+                "priority": "medium",
+                "department": "finance",
+                "confidence": 0.82,
+                "decision_rationale": "The document appears to be a request for tax assistance.",
+                "summary": "Tax assistance request",
+            },
+            4,
+            2,
+        )
 
 
 class DummyRetriever:

@@ -1,0 +1,7 @@
+{
+    "python.defaultInterpreterPath": "/mnt/d/civicos/.venv/bin/python",
+    "python.analysis.extraPaths": [
+        "/mnt/d/civicos"
+    ],
+    "python.venvPath": "/mnt/d/civicos/.venv"
+}

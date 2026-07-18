@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+
 from pydantic import ValidationError
 
 from app.schemas.process import DecisionOutput
@@ -15,7 +16,9 @@ class OutputGuard:
         try:
             decision = DecisionOutput.model_validate(payload)
         except ValidationError as exc:
-            raise OutputValidationError("LLM output did not conform to the expected schema") from exc
+            raise OutputValidationError(
+                "LLM output did not conform to the expected schema"
+            ) from exc
 
         for value in decision.model_dump().values():
             if isinstance(value, str) and self._looks_like_pii(value):

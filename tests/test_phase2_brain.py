@@ -9,12 +9,11 @@ Validates:
 
 from __future__ import annotations
 
+import uuid
 from unittest.mock import patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-
-import uuid
 
 from app.main import app
 from app.schemas.process import DocumentCategory, Priority, SourceType
@@ -26,6 +25,7 @@ def _presidio_available() -> bool:
         return True
     except ImportError:
         return False
+
 
 # PRD Phase 2: three canonical test documents
 PHASE2_DOCUMENTS: list[dict[str, str]] = [
@@ -59,8 +59,6 @@ PII_DOCUMENT = (
     "John Smith (SSN 123-45-6789) reports a pothole on Main Street. "
     "Contact: john.smith@email.com, phone 555-123-4567."
 )
-
-
 
 
 @pytest.mark.asyncio

@@ -17,10 +17,13 @@ def test_get_answer_builds_prompt_and_returns_model_text() -> None:
         {"text": "Second context."},
     ]
 
-    with patch("app.services.rag.generator.retrieve", return_value=mock_chunks) as mock_retrieve, patch(
-        "app.services.rag.generator.client.chat.completions.create",
-        return_value=dummy_response,
-    ) as mock_create:
+    with (
+        patch("app.services.rag.generator.retrieve", return_value=mock_chunks) as mock_retrieve,
+        patch(
+            "app.services.rag.generator.client.chat.completions.create",
+            return_value=dummy_response,
+        ) as mock_create,
+    ):
         answer = get_answer("What is the scheme?")
 
     assert answer == "This is the answer."
@@ -30,7 +33,11 @@ def test_get_answer_builds_prompt_and_returns_model_text() -> None:
         messages=[
             {
                 "role": "user",
-                "content": "Use this context to answer the question: First context.\nSecond context.\n\nQuestion: What is the scheme?",
+                "content": (
+                    "Use this context to answer the question: First context.\n"
+                    "Second context.\n\n"
+                    "Question: What is the scheme?"
+                ),
             }
         ],
     )
@@ -41,10 +48,13 @@ def test_get_answer_handles_empty_context() -> None:
         choices=[SimpleNamespace(message=SimpleNamespace(content="No context available."))]
     )
 
-    with patch("app.services.rag.generator.retrieve", return_value=[]), patch(
-        "app.services.rag.generator.client.chat.completions.create",
-        return_value=dummy_response,
-    ) as mock_create:
+    with (
+        patch("app.services.rag.generator.retrieve", return_value=[]),
+        patch(
+            "app.services.rag.generator.client.chat.completions.create",
+            return_value=dummy_response,
+        ) as mock_create,
+    ):
         answer = get_answer("What now?")
 
     assert answer == "No context available."

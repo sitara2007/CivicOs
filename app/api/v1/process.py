@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db_session
 from app.core.config import get_settings
+from app.core.database import get_db
 from app.core.ids import new_uuid7
 from app.schemas.process import (
     ErrorResponse,
@@ -34,7 +35,7 @@ router = APIRouter(prefix="/api/v1", tags=["process"])
 async def process_document(
     body: ProcessRequest,
     response: Response,
-    session: AsyncSession | None = Depends(get_db_session),
+    session: Annotated[AsyncSession | None, Depends(get_db)],
 ) -> ProcessResponse:
     if not body.text.strip():
         raise HTTPException(status_code=400, detail="Malformed or empty payload")
@@ -92,7 +93,7 @@ async def process_document(
         requires_review=result.requires_review,
         hop_count=result.hop_count or None,
         pii_entities_masked=result.pii_entities_masked,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
 
 
@@ -103,7 +104,7 @@ async def process_document(
 )
 async def poll_process(
     trace_id: str,
-    session: AsyncSession | None = Depends(get_db_session),
+    session: Annotated[AsyncSession | None, Depends(get_db)],
 ) -> ProcessPollResponse:
     if session is None:
         raise HTTPException(status_code=503, detail="Database persistence is disabled")

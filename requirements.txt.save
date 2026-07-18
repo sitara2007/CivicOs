@@ -163,7 +163,7 @@ pydantic-core==2.46.4
 pygments==2.20.0
     # via rich
 python-dotenv==1.2.2
-    # via portalocker
+ # via portalocker
 pyyaml==6.0.3
     # via
     #   huggingface-hub

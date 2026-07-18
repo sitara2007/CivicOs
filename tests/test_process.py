@@ -50,7 +50,9 @@ async def test_process_returns_valid_json(mock_decision: DecisionOutput) -> None
         pii_entities_masked=2,
     )
 
-    with patch.object(PipelineService, "run_sync", new_callable=AsyncMock, return_value=mock_result):
+    with patch.object(
+        PipelineService, "run_sync", new_callable=AsyncMock, return_value=mock_result
+    ):
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/v1/process",

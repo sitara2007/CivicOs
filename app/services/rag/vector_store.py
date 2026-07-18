@@ -3,8 +3,8 @@ from qdrant_client.models import PointStruct
 from sentence_transformers import SentenceTransformer
 
 from app.core.config import get_settings
-from app.services.rag.loader import load_pdf
 from app.services.rag.chunker import chunk_text
+from app.services.rag.loader import load_pdf
 
 
 class LazySentenceTransformer:
@@ -33,11 +33,7 @@ def create_collection():
 
     if not client.collection_exists(collection_name):
         client.create_collection(
-            collection_name=collection_name,
-            vectors_config={
-                "size":384,
-                "distance":"Cosine"
-            }
+            collection_name=collection_name, vectors_config={"size": 384, "distance": "Cosine"}
         )
 
 
@@ -47,24 +43,13 @@ def store_chunks(chunks):
 
     embeddings = model.encode(chunks)
 
-    points=[]
+    points = []
 
     for i, vector in enumerate(embeddings):
+        points.append(PointStruct(id=i, vector=vector.tolist(), payload={"text": chunks[i]}))
 
-        points.append(
-            PointStruct(
-                id=i,
-                vector=vector.tolist(),
-                payload={
-                    "text":chunks[i]
-                }
-            )
-        )
+    client.upsert(collection_name=collection_name, points=points)
 
-    client.upsert(
-        collection_name=collection_name,
-        points=points
-    )
 
 if __name__ == "__main__":
     # Removed the local imports to avoid confusion

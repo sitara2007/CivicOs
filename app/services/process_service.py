@@ -8,6 +8,7 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.repositories.document_repo import DocumentRepository
 from app.schemas.process import (
     DecisionOutput,
     DocumentCategory,
@@ -16,7 +17,6 @@ from app.schemas.process import (
     SourceType,
 )
 from app.services.pipeline import PipelineResult, PipelineService
-from app.db.repositories.document_repo import DocumentRepository
 
 logger = logging.getLogger(__name__)
 
@@ -76,9 +76,7 @@ class ProcessService:
         await self._session.commit()
         return result
 
-    def _persist_redacted_callback(
-        self, document_id: uuid.UUID, trace_id: uuid.UUID
-    ):
+    def _persist_redacted_callback(self, document_id: uuid.UUID, trace_id: uuid.UUID):
         async def _save(redacted_text: str, entity_count: int) -> None:
             await self._repo.save_redacted(
                 document_id=document_id,

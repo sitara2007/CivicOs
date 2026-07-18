@@ -58,8 +58,10 @@ def classify_mock(redacted_text: str) -> DecisionOutput:
             priority=Priority.CRITICAL,
             department="Water Utilities",
             confidence=0.94,
-            decision_rationale="Emergency water infrastructure failure requiring immediate response.",
-            summary="Critical water main complaint routed to Water Utilities.",
+            decision_rationale=(
+                "Emergency water infrastructure failure requiring immediate response."
+            ),
+            summary=("Critical water main complaint routed to Water Utilities."),
         )
 
     if "permit" in lower and "renovat" in lower:
@@ -68,8 +70,8 @@ def classify_mock(redacted_text: str) -> DecisionOutput:
             priority=Priority.MEDIUM,
             department="Building Permits",
             confidence=0.88,
-            decision_rationale="Permit application request for building renovation.",
-            summary="Building permit request routed to Building Permits.",
+            decision_rationale=("Permit application request for building renovation."),
+            summary=("Building permit request routed to Building Permits."),
         )
 
     for keywords, decision in _RULES:
@@ -81,6 +83,8 @@ def classify_mock(redacted_text: str) -> DecisionOutput:
         priority=Priority.MEDIUM,
         department="General Intake",
         confidence=0.70,
-        decision_rationale="Document does not match a specialized category; routed to general intake.",
-        summary="Unclassified document sent to General Intake for manual review.",
+        decision_rationale=(
+            "Document does not match a specialized category; routed to general intake."
+        ),
+        summary=("Unclassified document sent to General Intake for manual review."),
     )

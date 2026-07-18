@@ -1,9 +1,12 @@
 """Application settings loaded from environment variables."""
 
 from __future__ import annotations
+
 from functools import lru_cache
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     # --- Critical Settings ---
@@ -27,11 +30,15 @@ class Settings(BaseSettings):
 
     # --- LLM Settings ---
     openai_model: str = Field(default="gpt-4o-mini", validation_alias="OPENAI_MODEL")
-    openai_embedding_model: str = Field(default="text-embedding-3-small", validation_alias="OPENAI_EMBEDDING_MODEL")
+    openai_embedding_model: str = Field(
+        default="text-embedding-3-small", validation_alias="OPENAI_EMBEDDING_MODEL"
+    )
 
     # --- RAG Settings ---
     rag_enabled: bool = Field(default=True, validation_alias="RAG_ENABLED")
-    rag_embedding_model: str = Field(default="all-MiniLM-L6-v2", validation_alias="RAG_EMBEDDING_MODEL")
+    rag_embedding_model: str = Field(
+        default="all-MiniLM-L6-v2", validation_alias="RAG_EMBEDDING_MODEL"
+    )
     rag_qdrant_path: str = Field(default="data/qdrant_db", validation_alias="RAG_QDRANT_PATH")
     rag_collection_name: str = Field(default="gov_docs", validation_alias="RAG_COLLECTION_NAME")
     rag_top_k: int = Field(default=3, validation_alias="RAG_TOP_K")
@@ -40,7 +47,9 @@ class Settings(BaseSettings):
 
     # --- Agentic & Review Settings ---
     max_agentic_hops: int = Field(default=5, validation_alias="MAX_AGENTIC_HOPS")
-    review_confidence_threshold: float = Field(default=0.75, validation_alias="REVIEW_CONFIDENCE_THRESHOLD")
+    review_confidence_threshold: float = Field(
+        default=0.75, validation_alias="REVIEW_CONFIDENCE_THRESHOLD"
+    )
     max_input_tokens: int = Field(default=8000, validation_alias="MAX_INPUT_TOKENS")
     max_document_tokens: int = Field(default=10_000, validation_alias="MAX_DOCUMENT_TOKENS")
     sync_mode: bool = Field(default=True, validation_alias="SYNC_MODE")
@@ -61,6 +70,7 @@ class Settings(BaseSettings):
     @property
     def broker_url(self) -> str:
         return self.celery_broker_url or self.redis_url
+
 
 @lru_cache
 def get_settings() -> Settings:

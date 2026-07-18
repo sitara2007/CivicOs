@@ -10,8 +10,9 @@ from dataclasses import dataclass
 from app.core.config import get_settings
 from app.schemas.process import DecisionOutput, SourceType
 from app.security.presidio import SanitizationError, sanitize
-from app.services.llm import AgenticHopExhausted, LLMService
+from app.services.llm import AgenticHopExhausted
 from app.services.text_utils import enforce_token_limit, normalize_text
+from app.services.workflow import LangGraphWorkflow
 
 logger = logging.getLogger(__name__)
 
@@ -23,12 +24,13 @@ class PipelineResult:
     requires_review: bool
     hop_count: int = 0
     pii_entities_masked: int = 0
+    rag_triggered: bool = False
 
 
 class PipelineService:
     def __init__(self) -> None:
         self._settings = get_settings()
-        self._llm = LLMService()
+        self._workflow = LangGraphWorkflow()
 
     async def run_sync(
         self,
@@ -50,18 +52,23 @@ class PipelineService:
             redacted_text, entity_count = sanitize(normalized)
             if persist_redacted is not None:
                 await persist_redacted(redacted_text, entity_count)
-            logger.info("pii_redacted", extra={"trace_id": str(trace_id), "entities": entity_count})
+            logger.info(
+                "pii_redacted",
+                extra={"trace_id": str(trace_id), "entities": entity_count},
+            )
 
-            policy_context = self._retrieve_policy_context(redacted_text, trace_id)
-            decision, hop_count = self._llm.classify(redacted_text, policy_context=policy_context)
-            requires_review = decision.confidence < self._settings.review_confidence_threshold
+            workflow_result = self._workflow.classify(redacted_text, trace_id=trace_id)
+            requires_review = (
+                workflow_result.decision.confidence < self._settings.review_confidence_threshold
+            )
 
             return PipelineResult(
                 status="completed",
-                decision=decision,
+                decision=workflow_result.decision,
                 requires_review=requires_review,
-                hop_count=hop_count,
+                hop_count=workflow_result.hop_count,
                 pii_entities_masked=entity_count,
+                rag_triggered=workflow_result.rag_triggered,
             )
         except SanitizationError:
             logger.error("pipeline_sanitization_failed", extra={"trace_id": str(trace_id)})
