@@ -110,39 +110,49 @@ app/
 - **Database:** PostgreSQL
 - **Observability:** OpenTelemetry, structured JSON logging
 - **Infrastructure:** Docker, Docker Compose
-- 
-## CivicOs Architecture
+
+**Architecture Diagram**
 ```mermaid
 graph TD
-    subgraph Client_Layer
-        Client[Client Request]
-    end
-
-    subgraph API_Gateway
+    %% Subgraphs with deployment specs
+    subgraph API_Gateway["API_Gateway (K8s Service: NodePort)"]
         API[FastAPI Gateway]
-        MW[Middleware: Auth/TraceID]
+        OtelAPI[("fa:fa-bullseye Otel:API TraceID/Metrics")]
+        OtelAPI --> API
     end
 
-    subgraph Core_Pipeline
+    subgraph Core_Pipeline["Core_Pipeline (K8s Deployment: Microservices Cluster)"]
         Pipe[Pipeline Service]
-        PII[Presidio Sanitization]
         RAG[Qdrant RAG Context]
         LLM[Decision Engine]
+        OtelRAG[("fa:fa-bullseye Otel:RAG TraceID/Metrics")]
+        OtelLLM[("fa:fa-bullseye Otel:LLM TraceID/Metrics")]
+        OtelRAG --> RAG
+        OtelLLM --> LLM
+        Pipe --> RAG --> LLM
     end
 
-    subgraph Persistence_Layer
+    subgraph Persistence_Layer["Persistence_Layer (Cloud Storage: PostgreSQL + Distributed FS)"]
         DB[(PostgreSQL)]
         Audit[Hash-Chain Auditor]
+        OtelDB[("fa:fa-bullseye Otel:DB TraceID/Metrics")]
+        OtelAudit[("fa:fa-bullseye Otel:Audit TraceID/Metrics")]
+        OtelDB --> DB
+        OtelAudit --> Audit
     end
 
-    subgraph Async_Worker
+    subgraph Async_Worker["Async_Worker (K8s CronJob/Worker Node Pool)"]
         Celery[Celery/Background Task]
         DLQ[Dead Letter Queue]
+        OtelCelery[("fa:fa-bullseye Otel:Worker TraceID/Metrics")]
+        OtelDLQ[("fa:fa-bullseye Otel:DLQ TraceID/Metrics")]
+        OtelCelery --> Celery
+        OtelDLQ --> DLQ
     end
 
-    Client --> API --> MW --> Pipe
-    Pipe --> PII --> RAG --> LLM
-    LLM --> Audit --> DB
-    Pipe --> Celery --> DB
-    Celery -- Failure --> DLQ
-    DB --> Response[HTTP 200/202]
+    %% Core connections
+    API --> Pipe
+    LLM --> Audit
+    Audit --> DB
+    DB --> Celery
+    Celery -- Failed msg --> DLQ
