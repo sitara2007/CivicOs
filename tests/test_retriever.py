@@ -33,20 +33,33 @@ def test_retrieve_returns_chunks_from_qdrant() -> None:
             "app.services.rag.retriever.client.query_points",
             return_value=mock_query_result,
         ) as mock_query,
+        patch(
+            "app.services.rag.retriever._pgvector_bm25_fallback",
+            return_value=[{"text": "Fallback document.", "score": 0.5}],
+        ) as mock_fallback,
+        patch(
+            "app.services.rag.retriever.rerank_chunks",
+            return_value=[
+                {"text": "Document one.", "score": 1.2},
+                {"text": "Document two.", "score": 0.9},
+            ],
+        ) as mock_rerank,
     ):
         chunks = retrieve("What is this scheme?", top_k=2)
 
     assert chunks == [
-        {"text": "Document one.", "score": 0.91},
-        {"text": "Document two.", "score": 0.72},
+        {"text": "Document one.", "score": 1.2},
+        {"text": "Document two.", "score": 0.9},
     ]
     mock_encode.assert_called_once_with("What is this scheme?")
     mock_query.assert_called_once_with(
         collection_name="gov_docs",
         query=[0.1, 0.2, 0.3],
-        limit=2,
+        limit=10,
         timeout=0.3,
     )
+    mock_fallback.assert_called_once_with("What is this scheme?", 10)
+    mock_rerank.assert_called_once()
 
 
 def test_retrieve_returns_empty_list_when_no_points() -> None:
@@ -87,6 +100,10 @@ def test_retrieve_falls_back_to_pgvector_when_qdrant_times_out() -> None:
             "app.services.rag.retriever._pgvector_bm25_fallback",
             return_value=fallback_chunks,
         ) as mock_fallback,
+        patch(
+            "app.services.rag.retriever.rerank_chunks",
+            return_value=fallback_chunks,
+        ) as mock_rerank,
     ):
         chunks = retrieve("Fallback query", top_k=2)
 
@@ -94,7 +111,8 @@ def test_retrieve_falls_back_to_pgvector_when_qdrant_times_out() -> None:
     mock_query.assert_called_once_with(
         collection_name="gov_docs",
         query=[0.7, 0.8, 0.9],
-        limit=2,
+        limit=10,
         timeout=0.3,
     )
-    mock_fallback.assert_called_once_with("Fallback query", 2)
+    mock_fallback.assert_called_once_with("Fallback query", 10)
+    mock_rerank.assert_called_once_with("Fallback query", fallback_chunks, 2)

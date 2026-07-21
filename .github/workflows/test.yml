@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       # 1. Setup caching taaki heavy libraries bar-bar download na hon
       - name: Cache dependencies
         uses: actions/cache@v4
@@ -23,7 +23,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-      
+
       # 3. Test isolation (Xdist use karo parallel testing ke liye)
       - name: Run tests
         run: pytest -n auto --dist loadscope

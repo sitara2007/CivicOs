@@ -1,6 +1,6 @@
 {
   "name": "Civicos Architect Environment",
-  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
   "features": {
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
@@ -9,9 +9,16 @@
       "extensions": [
         "ms-python.python",
         "charliermarsh.ruff",
-        "ms-azuretools.vscode-docker"
-      ]
+        "ms-azuretools.vscode-docker",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "python.analysis.typeCheckingMode": "basic"
+      }
     }
   },
-  "postCreateCommand": "pip install -r requirements.txt && pip install ruff"
+  "postCreateCommand": "python -m pip install --upgrade pip && python -m pip install -r requirements.txt && python -m pip install pre-commit ruff",
+  "postStartCommand": "pre-commit install && pre-commit run --all-files",
+  "remoteUser": "vscode"
 }

@@ -6,7 +6,7 @@
 * [33m56754a46[m fix: import os in config.py and update model_config for environment handling
 * [33md502e78e[m feat: update Dockerfile, README, and health endpoints; add PyTorch dependency
 *   [33m3c70006a[m fix: resolve merge conflicts between local and remote
-[32m|[m[33m\[m  
+[32m|[m[33m\[m
 [32m|[m * [33m4bf825ac[m Update README.md
 [32m|[m * [33mab937f20[m Enhance README with detailed project information
 [32m|[m * [33m55cb1b01[m Initial commit

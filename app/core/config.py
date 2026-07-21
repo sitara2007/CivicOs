@@ -39,6 +39,14 @@ class Settings(BaseSettings):
     rag_embedding_model: str = Field(
         default="all-MiniLM-L6-v2", validation_alias="RAG_EMBEDDING_MODEL"
     )
+    rag_reranker_model: str = Field(
+        default="cross-encoder/bge-reranker-large",
+        validation_alias="RAG_RERANKER_MODEL",
+    )
+    rag_rerank_candidate_k: int = Field(
+        default=10,
+        validation_alias="RAG_RERANK_CANDIDATE_K",
+    )
     rag_qdrant_path: str = Field(default="data/qdrant_db", validation_alias="RAG_QDRANT_PATH")
     rag_collection_name: str = Field(default="gov_docs", validation_alias="RAG_COLLECTION_NAME")
     rag_top_k: int = Field(default=3, validation_alias="RAG_TOP_K")

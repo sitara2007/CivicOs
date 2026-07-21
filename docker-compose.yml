@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   postgres:
     image: pgvector/pgvector:pg16
@@ -15,8 +17,14 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
-    mem_limit: 1g
-    cpus: 0.5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 512M
     networks:
       backend:
         aliases:
@@ -34,8 +42,14 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
-    mem_limit: 1g
-    cpus: 0.5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 512M
     networks:
       backend:
         aliases:
@@ -54,20 +68,42 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
-    mem_limit: 512m
-    cpus: 0.25
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 512M
+        reservations:
+          cpus: "0.10"
+          memory: 256M
     networks:
       backend:
         aliases:
           - redis
 
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otel-collector-config.yml"]
+    volumes:
+      - ./otel-collector-config.yml:/etc/otel-collector-config.yml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      backend:
+        aliases:
+          - otel-collector
+
   api:
     build:
       context: .
-      target: api
     ports:
       - "8000:8000"
     env_file: .env
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+      OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "http://otel-collector:4318"
+      OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "http://otel-collector:4318"
     depends_on:
       postgres:
         condition: service_healthy
@@ -75,8 +111,22 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    mem_limit: 1g
-    cpus: 0.5
+      otel-collector:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 512M
     networks:
       backend:
         aliases:
@@ -85,8 +135,12 @@ services:
   worker:
     build:
       context: .
-      target: worker
     env_file: .env
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+      OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "http://otel-collector:4318"
+      OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "http://otel-collector:4318"
+    command: ["celery", "-A", "app.worker.celery_app", "worker", "--loglevel=info"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -94,8 +148,16 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    mem_limit: 1g
-    cpus: 0.5
+      otel-collector:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 512M
     networks:
       backend:
         aliases:

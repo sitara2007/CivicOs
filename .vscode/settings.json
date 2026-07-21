@@ -1,7 +1,16 @@
 {
-    "python.defaultInterpreterPath": "/mnt/d/civicos/.venv/bin/python",
-    "python.analysis.extraPaths": [
-        "/mnt/d/civicos"
-    ],
-    "python.venvPath": "/mnt/d/civicos/.venv"
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.ruff": "explicit",
+    "source.organizeImports.ruff": "explicit"
+  },
+  "python.defaultInterpreterPath": "/mnt/d/civicos/.venv/bin/python",
+  "python.analysis.extraPaths": [
+    "/mnt/d/civicos"
+  ],
+  "python.venvPath": "/mnt/d/civicos/.venv",
+  "python.analysis.typeCheckingMode": "strict",
+  "files.associations": {
+    "*.jsonl": "json"
+  }
 }

@@ -14,10 +14,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN python -m venv /opt/venv
 COPY pyproject.toml ./
+COPY README.md ./
+COPY app ./app
 # Pip upgrade aur PyTorch install ko alag step mein rakho
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
-    pip install --no-cache-dir .
+RUN python -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    python -m pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
+    python -m pip install --no-cache-dir .
 
 # 3. Runtime Stage
 FROM base AS runtime
