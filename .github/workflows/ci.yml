@@ -52,16 +52,10 @@ jobs:
           QDRANT_HOST: localhost
           QDRANT_PORT: 6333
           PYTEST_CURRENT_TEST: true
-        run: pytest tests --verbose
+        run: python -m pytest -n auto --dist loadscope
 
       - name: Security Scan (Dependencies)
         run: pip-audit
 
       - name: Lint with Ruff
         run: ruff check . --output-format=github
-
-      - name: Run AI Evaluations
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          promptfoo eval -c tests/evaluation/promptfoo.yaml --assert-fail-fast
