@@ -23,6 +23,13 @@ from app.services.observability import configure_telemetry, telemetry
 logger = logging.getLogger("app.main")
 
 
+def validate_required_environment() -> None:
+    """Validate that mandatory environment variables are present."""
+    settings = get_settings()
+    if not settings.use_mock_llm and not settings.openai_api_key:
+        raise ValueError("OPENAI_API_KEY is required when mock_llm is disabled.")
+
+
 async def create_tables_on_startup() -> None:
     """Initialize database tables automatically on application startup."""
     settings = get_settings()
@@ -42,6 +49,9 @@ async def create_tables_on_startup() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Manage application startup and shutdown concerns."""
+    # 0. Validate Environment first
+    validate_required_environment()
+
     # 1. Initialize Telemetry safely
     if os.getenv("OTEL_SDK_DISABLED", "false").lower() == "true":
         logger.warning("Telemetry is disabled via OTEL_SDK_DISABLED environment variable.")
