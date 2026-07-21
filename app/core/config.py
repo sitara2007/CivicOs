@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 
 from pydantic import Field
@@ -9,9 +10,27 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls,
+        init_settings,
+        env_settings,
+        dotenv_settings,
+        file_secret_settings,
+    ):
+        if os.getenv("PYTEST_CURRENT_TEST") or os.getenv("SKIP_DOTENV") == "true":
+            return init_settings, env_settings, file_secret_settings
+        return init_settings, env_settings, dotenv_settings, file_secret_settings
+
     # --- Critical Settings ---
-    # Agar ye .env mein nahi mile, toh app start nahi hogi (Fail-Fast)
-    openai_api_key: str = Field(validation_alias="OPENAI_API_KEY")
+    openai_api_key: str = Field(default="", validation_alias="OPENAI_API_KEY")
     database_url: str = Field(default="", validation_alias="DATABASE_URL")
     qdrant_url: str = Field(default="", validation_alias="QDRANT_URL")
 
@@ -63,12 +82,6 @@ class Settings(BaseSettings):
     sync_mode: bool = Field(default=True, validation_alias="SYNC_MODE")
     mock_llm: bool = Field(default=False, validation_alias="MOCK_LLM")
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-    )
-
     @property
     def use_mock_llm(self) -> bool:
         if self.mock_llm:
@@ -82,5 +95,4 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    # Pydantic sab handle kar lega, koi override ki zaroorat nahi
     return Settings()
