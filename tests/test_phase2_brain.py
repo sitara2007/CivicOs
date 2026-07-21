@@ -125,7 +125,8 @@ def test_presidio_masks_pii_before_llm() -> None:
 
 @pytest.mark.skipif(
     not _presidio_available(),
-    reason="presidio-analyzer not installed; run: pip install presidio-analyzer presidio-anonymizer",
+    reason="presidio-analyzer not installed; run:" \
+    " pip install presidio-analyzer presidio-anonymizer",
 )
 def test_presidio_integration_masks_entities() -> None:
     """Optional live Presidio test when dependencies are installed."""

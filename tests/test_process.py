@@ -18,8 +18,10 @@ def mock_decision() -> DecisionOutput:
         priority=Priority.HIGH,
         department="Public Works",
         confidence=0.92,
-        decision_rationale="Infrastructure damage complaint requiring urgent public works attention.",
-        summary="Citizen reports pothole damage on Main Street routed to Public Works.",
+        decision_rationale="Infrastructure damage complaint requiring " \
+        "urgent public works attention.",
+        summary="Citizen reports pothole damage on Main Street " \
+        "routed to Public Works.",
     )
 
 

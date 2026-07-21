@@ -1,40 +1,20 @@
-from __future__ import annotations
-
-from typing import Any
+import logging
 
 from sentence_transformers import CrossEncoder
 
-from app.core.config import get_settings
+logger = logging.getLogger(__name__)
 
-settings = get_settings()
-
-
-class LazyCrossEncoder:
-    def __init__(self, model_name: str) -> None:
+class SafeReranker:
+    def __init__(self, model_name: str = "cross-encoder/bge-reranker-large"):
         self._model_name = model_name
-        self._model: CrossEncoder | None = None
+        self._model = None
 
-    def score(self, pairs: list[tuple[str, str]]) -> list[float]:
-        if self._model is None:
-            self._model = CrossEncoder(self._model_name)
-        return self._model.predict(pairs).tolist()
+    def score(self, pairs):
+        if not self._model:
+            try:
+                self._model = CrossEncoder(self._model_name)
+            except Exception as e:
+                logger.warning(f"Could not load Hugging Face model {self._model_name}: {e}. Falling back to default scoring.")  # noqa: E501
+                return [0.0] * len(pairs)
 
-
-reranker = LazyCrossEncoder(settings.rag_reranker_model)
-
-
-def rerank_chunks(query: str, chunks: list[dict[str, Any]], top_k: int) -> list[dict[str, Any]]:
-    if not chunks:
-        return []
-
-    pairs = [(query, chunk["text"]) for chunk in chunks]
-    scores = reranker.score(pairs)
-
-    ranked = [
-        {"text": chunk["text"], "score": float(score)}
-        for chunk, score in sorted(
-            zip(chunks, scores, strict=True), key=lambda pair: pair[1], reverse=True
-        )
-    ]
-
-    return ranked[:top_k]
+        return self._model.score(pairs)

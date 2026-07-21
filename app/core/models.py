@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import uuid
 from enum import StrEnum
 
-from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String
+from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, String
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import declarative_base
@@ -51,3 +53,15 @@ class DecisionORM(Base):
     hop_count = Column(Integer, default=0)
     requires_review = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    trace_id = Column(PG_UUID(as_uuid=True), index=True, nullable=False)
+    document_id = Column(PG_UUID(as_uuid=True), index=True, nullable=True)
+    action = Column(SQLEnum(AuditAction), nullable=False)
+    event_metadata = Column(JSON, default=dict)
+    prev_hash = Column(String, nullable=False, default="")
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())

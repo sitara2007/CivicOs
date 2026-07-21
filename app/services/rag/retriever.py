@@ -22,14 +22,12 @@ class LazySentenceTransformer:
 
 
 settings = get_settings()
-# same model used while storing
 model = LazySentenceTransformer(settings.rag_embedding_model)
 
 if settings.qdrant_url.strip():
     client = QdrantClient(url=settings.qdrant_url)
 else:
     client = QdrantClient(path=settings.rag_qdrant_path)
-
 
 collection_name = settings.rag_collection_name
 
@@ -80,15 +78,17 @@ def retrieve(query: str, top_k: int = 3) -> list[dict[str, Any]]:
 
     bm25_chunks = _pgvector_bm25_fallback(query, candidate_k)
     candidates = _combine_candidates(qdrant_chunks, bm25_chunks)
+
+    if not candidates:
+        return []
+
     return rerank_chunks(query, candidates, top_k)
 
 
 if __name__ == "__main__":
     question = "Who is eligible for this scheme?"
-
     answers = retrieve(question)
 
     for item in answers:
         print("\nSCORE:", item["score"])
-
         print(item["text"][:300])
