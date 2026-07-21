@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-name: CI
+name: AI Infra CI/CD Gate
 
 on:
   push:
@@ -10,6 +10,28 @@ on:
 jobs:
   test-and-eval:
     runs-on: ubuntu-latest
+
+    # Spin up backing services for hybrid retrieval and vector search tests
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: civicos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      qdrant:
+        image: qdrant/qdrant:latest
+        ports:
+          - 6333:6333
+
     steps:
       - uses: actions/checkout@v4
 
@@ -23,10 +45,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install promptfoo pytest httpx pip-audit ruff
+          pip install promptfoo pytest pytest-xdist httpx pip-audit ruff
 
-      - name: Run Unit Tests
-        run: pytest tests --verbose
+      - name: Run Unit & Integration Tests
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/civicos_test
+          QDRANT_HOST: localhost
+          QDRANT_PORT: 6333
+        run: |
+          pytest tests --verbose -n auto --dist loadscope
 
       - name: Security Scan (Dependencies)
         run: pip-audit
@@ -34,7 +61,7 @@ jobs:
       - name: Lint with Ruff
         run: ruff check . --output-format=github
 
-      - name: Run AI Evaluations
+      - name: Run AI Evaluations (Promptfoo)
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
