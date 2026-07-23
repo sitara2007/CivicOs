@@ -111,7 +111,7 @@ app/
 - **Observability:** OpenTelemetry, structured JSON logging
 - **Infrastructure:** Docker, Docker Compose
 
-**Architecture Diagram**
+## **Architecture Diagram**
 ```mermaid
 graph TD
     %% Subgraphs with deployment specs
