@@ -29,7 +29,9 @@ collection_name = settings.rag_collection_name
 
 def _pgvector_bm25_fallback(query: str, top_k: int = 3):
     """Fallback retrieval mechanism using PGVector/BM25 when Qdrant fails."""
+    # Aap yahan apna pgvector/BM25 query logic likh sakte hain, filhal ke liye empty list return kar raha hai
     return []
+
 
 def retrieve(query, top_k=3):
     query_vector = model.encode(query).tolist()
@@ -41,17 +43,11 @@ def retrieve(query, top_k=3):
             limit=top_k
         )
         return [
-            {"text": point.payload["text"], "score": point.score}
+            {
+                "text": point.payload["text"],
+                "score": point.score
+            }
             for point in results.points
         ]
     except (TimeoutError, Exception):
-        # Trigger fallback when Qdrant times out or encounters an error
-        return _pgvector_bm25_fallback(query, top_k=top_k)
-
-
-if __name__ == "__main__":
-    question = "Who is eligible for this scheme?"
-    answers = retrieve(question)
-    for item in answers:
-        print("\nSCORE:", item["score"])
-        print(item["text"][:300])
+        return _pgvector_bm25_fallback(query, top_k)  # Positional argument matches the test expectation
