@@ -1,4 +1,5 @@
 # GovFlow AI
+[![CI](https://github.com/sitara2007/CivicOs/actions/workflows/ci.yml/badge.svg)](https://github.com/sitara2007/CivicOs/actions/workflows/ci.yml)
 
 Production-grade government document classification and routing engine.
 
