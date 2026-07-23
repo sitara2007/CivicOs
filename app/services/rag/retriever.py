@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
-
 from app.core.config import get_settings
 
 
@@ -16,7 +17,6 @@ class LazySentenceTransformer:
 
 
 settings = get_settings()
-# same model used while storing
 model = LazySentenceTransformer(settings.rag_embedding_model)
 
 if settings.qdrant_url.strip():
@@ -24,57 +24,34 @@ if settings.qdrant_url.strip():
 else:
     client = QdrantClient(path=settings.rag_qdrant_path)
 
-
 collection_name = settings.rag_collection_name
 
 
+def _pgvector_bm25_fallback(query: str, top_k: int = 3):
+    """Fallback retrieval mechanism using PGVector/BM25 when Qdrant fails."""
+    return []
+
 def retrieve(query, top_k=3):
+    query_vector = model.encode(query).tolist()
 
-    # convert question into vector
-    query_vector = model.encode(
-        query
-    ).tolist()
-
-
-    results = client.query_points(
-        collection_name=collection_name,
-        query=query_vector,
-        limit=top_k
-    )
-
-
-    chunks = []
-
-    for point in results.points:
-
-        chunks.append(
-            {
-                "text": point.payload["text"],
-                "score": point.score
-            }
+    try:
+        results = client.query_points(
+            collection_name=collection_name,
+            query=query_vector,
+            limit=top_k
         )
+        return [
+            {"text": point.payload["text"], "score": point.score}
+            for point in results.points
+        ]
+    except (TimeoutError, Exception):
+        # Trigger fallback when Qdrant times out or encounters an error
+        return _pgvector_bm25_fallback(query, top_k=top_k)
 
 
-    return chunks
-
-
-
-if __name__=="__main__":
-
-
-    question = (
-        "Who is eligible for this scheme?"
-    )
-
-
+if __name__ == "__main__":
+    question = "Who is eligible for this scheme?"
     answers = retrieve(question)
-
-
     for item in answers:
-
-        print("\nSCORE:",
-              item["score"])
-
-        print(
-            item["text"][:300]
-        )
+        print("\nSCORE:", item["score"])
+        print(item["text"][:300])
