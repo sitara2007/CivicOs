@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
 from fastapi import FastAPI
@@ -33,7 +32,6 @@ def validate_required_environment() -> None:
         raise RuntimeError(f"Missing required environment variable(s): {missing_vars}")
 
 
-@asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Manage application startup and shutdown concerns."""
 
