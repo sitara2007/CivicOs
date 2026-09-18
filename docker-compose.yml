@@ -64,7 +64,8 @@ services:
   api:
     build:
       context: .
-      target: api
+      target: runtime
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     ports:
       - "8000:8000"
     env_file: .env
@@ -85,7 +86,8 @@ services:
   worker:
     build:
       context: .
-      target: worker
+      target: runtime
+    command: celery -A app.tasks.process_document worker --loglevel=INFO --queues=govflow
     env_file: .env
     depends_on:
       postgres:
