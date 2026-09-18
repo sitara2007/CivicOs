@@ -9,12 +9,11 @@ Validates:
 
 from __future__ import annotations
 
+import uuid
 from unittest.mock import patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-
-import uuid
 
 from app.main import app
 from app.schemas.process import DocumentCategory, Priority, SourceType
