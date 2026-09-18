@@ -103,6 +103,20 @@ services:
         aliases:
           - worker
 
+  python-rag-service:
+    build:
+      context: ./python-rag-service
+      dockerfile: Dockerfile
+    command: uvicorn app:app --host 0.0.0.0 --port 8001
+    ports:
+      - "8001:8001"
+    environment:
+      PORT: "8001"
+    networks:
+      backend:
+        aliases:
+          - python-rag-service
+
 networks:
   backend:
     driver: bridge
