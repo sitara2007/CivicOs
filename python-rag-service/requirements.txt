@@ -1,5 +1,6 @@
-fastapi>=0.110.0,<0.116.0
+fastapi==0.115.0
 uvicorn>=0.28.0
-pydantic>=2.7.0,<2.9.0
-qdrant-client>=1.8.0
+pydantic==2.9.2
+pydantic-core==2.27.1
+qdrant-client==1.12.1
 requests
