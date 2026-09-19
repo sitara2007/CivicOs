@@ -1,4 +1,7 @@
 python-rag-service/
 cmd/
+internal/
 schema/
 scripts/
+docker-compose.yml
+Dockerfile
