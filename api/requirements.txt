@@ -1,0 +1,10 @@
+asyncpg>=0.29
+celery>=5.4
+fastapi>=0.115
+openai>=1.0
+pydantic>=2.7
+pydantic-settings>=2.2
+pybreaker>=1.0
+sqlalchemy[asyncio]>=2.0
+tenacity>=8.2
+uuid6>=2024.1.12

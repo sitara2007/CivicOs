@@ -1,0 +1,137 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "CivicOS: Verify imports",
+			"type": "shell",
+			"command": "make check",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": "test",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "CivicOS: Run test suite",
+			"type": "shell",
+			"command": "make test",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": "test",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "CivicOS: Full verification loop",
+			"type": "shell",
+			"command": "make check && make test",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "CivicOS: Commit pinned RAG requirements",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"add",
+				"--",
+				"python-rag-service/requirements.txt"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "CivicOS: Commit pinned RAG requirements",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"commit",
+				"-m",
+				"fix: pin RAG service wheel dependencies"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "CivicOS: Commit RAG pins now",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"commit",
+				"-m",
+				"fix: pin RAG service wheel dependencies"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "CivicOS: Commit RAG pins final",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"commit",
+				"-m",
+				"fix-rag-wheel-deps"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "CivicOS: Push origin main",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"push",
+				"origin",
+				"main"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "CivicOS: Push feature commit",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"push",
+				"origin",
+				"feat/hybrid-rerank-engine"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "CivicOS: Verify Git result",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"status",
+				"--short",
+				"--branch"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}
