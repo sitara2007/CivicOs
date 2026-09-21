@@ -1,3 +1,24 @@
+## 🚀 Live Demo
+
+**API Endpoint:** https://abc123xyz.ngrok-free.app/docs
+**Health Check:** https://abc123xyz.ngrok-free.app/health
+
+> ⚠️ Demo URL 7 days active rahega. Production deployment available on request.
+
+## 📊 What It Does
+
+Government document triage with:
+- **PII Guard** — Redacts sensitive data BEFORE model calls
+- **Hash-Chain Audit** — Tamper-proof compliance logs
+- **Hallucination Scoring** — Every output verified
+- **12K events/sec** — Go + ClickHouse ingest pipeline
+
+## 🧪 Try It Now
+
+```bash
+curl -X POST https://abc123xyz.ngrok-free.app/api/v1/process \
+  -H "Content-Type: application/json" \
+  -d '{"document":"Sample RTI request text","tenant_id":"demo"}'
 ## GovFlow AI
 
 [![CI](https://github.com/sitara2007/CivicOs/actions/workflows/ci.yml/badge.svg)](https://github.com/sitara2007/CivicOs/actions/workflows/ci.yml)
