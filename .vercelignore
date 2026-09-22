@@ -1,50 +1,38 @@
-.git/
-.venv*/
+# Python env
+.venv/
 venv/
 env/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-node_modules/
-.npm/
-.npx/
-.next/
-dist/
-build/
-*.db
-*.sqlite
-*.sqlite3
-qdrant_data/
-qdrant_db/
-vector_db/
-python-rag-service/
-api/
+**/.venv/
+**/venv/
+**/__pycache__/
+**/*.pyc
+
+# Backend
 app/
-CivicOs/
-backend/
+cmd/
 internal/
+python-rag-service/
 scripts/
-data/
-docs/
-eval/
-schema/
 tests/
+data/
+eval/
+
+# Python deps
 requirements.txt
 requirements*.txt
 pyproject.toml
-poetry.lock
-Pipfile
-Pipfile.lock
-uv.lock
-alembic.ini
+Pipfile*
+
+# Docker
 Dockerfile
 docker-compose.yml
+.dockerignore
 Makefile
-README.md
-SECURITY.md
-LICENSE
-.vercel/
-.env*
-!.env.example
+
+# Nested repo
+CivicOs/
+
+# Misc
 *.log
+*.db
+*.sqlite*
