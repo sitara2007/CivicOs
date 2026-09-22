@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	defaultAddr               = ":8443"
+	defaultAddr               = "0.0.0.0:8443"
 	defaultRingCap            = 65536
 	defaultMaxBodySize        = 1 << 20
 	defaultWorkers            = 4
@@ -453,6 +453,16 @@ func main() {
 		WriteTimeout:      5 * time.Second,
 		IdleTimeout:       30 * time.Second,
 	}
+
+	bindAddr := getenv("AUDIT_ADDR", defaultAddr)
+	if bindAddr == "localhost" || bindAddr == "127.0.0.1" || bindAddr == "[::1]" {
+		port := getenv("PORT", "8443")
+		bindAddr = "0.0.0.0:" + port
+	}
+	if bindAddr == "" {
+		bindAddr = defaultAddr
+	}
+	srv.Addr = bindAddr
 
 	logger.Printf("listening on %s", srv.Addr)
 	serverErr := make(chan error, 1)
