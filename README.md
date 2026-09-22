@@ -2,7 +2,7 @@
 
 **API Endpoint:** https://abc123xyz.ngrok-free.app/docs
 **Health Check:** https://abc123xyz.ngrok-free.app/health
-
+**Deployed:** https://civic-os-two.vercel.app
 > ⚠️ Demo URL 7 days active rahega. Production deployment available on request.
 
 ## 📊 What It Does
