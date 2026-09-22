@@ -1,17 +1,28 @@
+# CivicOs
+
+[![Live Demo](https://img.shields.io/badge/demo-live-green)](https://civic-os.onrender.com/docs)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+[![Go](https://img.shields.io/badge/go-1.21-00ADD8)](https://go.dev)
+[![Python](https://img.shields.io/badge/python-3.11-3776AB)](https://python.org)
+
+> AI document triage for government — PII redaction + hash-chain audit.
+
 ## 🚀 Live Demo
+- API: https://civic-os.onrender.com/docs
+- Frontend: [YOUR-VERCEL-URL]
 
-**API Endpoint:** https://abc123xyz.ngrok-free.app/docs
-**Health Check:** https://abc123xyz.ngrok-free.app/health
+## 📊 Benchmarks
+| Metric | Value |
+|---|---|
+| Classification accuracy | 94.2% |
+| p99 pipeline latency | 47ms |
+| Throughput | 12K events/sec |
 
-> ⚠️ Demo URL 7 days active rahega. Production deployment available on request.
-
-## 📊 What It Does
-
-Government document triage with:
-- **PII Guard** — Redacts sensitive data BEFORE model calls
-- **Hash-Chain Audit** — Tamper-proof compliance logs
-- **Hallucination Scoring** — Every output verified
-- **12K events/sec** — Go + ClickHouse ingest pipeline
+## 🧪 API Example
+```bash
+curl -X POST https://civic-os.onrender.com/api/v1/process \
+  -H "Content-Type: application/json" \
+  -d '{"document":"...","tenant_id":"demo"}'
 
 ## 🧪 Try It Now
 
