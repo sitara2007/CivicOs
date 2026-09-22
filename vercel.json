@@ -1,13 +1,15 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "installCommand": "npm ci",
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
   "cleanUrls": true,
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/api/(.*)", "dest": "https://civicos-480a.onrender.com/api/$1" },
-    { "src": "/docs", "dest": "https://civicos-480a.onrender.com/docs" }
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://civicos-480a.onrender.com/api/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://civicos-480a.onrender.com/health"
+    }
   ]
 }
