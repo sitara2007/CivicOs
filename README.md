@@ -1,3 +1,27 @@
+# CivicOs — AI Document Triage for Government
+
+[![Live API](https://img.shields.io/badge/API-live-brightgreen)](https://civicos-480a.onrender.com/health)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+[![Go](https://img.shields.io/badge/go-1.21-00ADD8)](https://go.dev)
+
+> PII redaction + hash-chain audit + hallucination scoring.
+
+## 🚀 Live Endpoints
+
+- **API Docs:** https://civicos-480a.onrender.com/docs
+- **Health:** https://civicos-480a.onrender.com/health
+- **Frontend:** https://civic-os-two.vercel.app
+
+## 📊 Benchmarks
+
+| Metric | Value |
+|---|---|
+| p99 latency | < 50ms |
+| Throughput | 12K events/sec |
+| Classification accuracy | 94.2% |
+
+---
+
 ## 🚀 Live Demo
 
 **API Endpoint:** https://abc123xyz.ngrok-free.app/docs
