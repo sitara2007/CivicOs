@@ -27,7 +27,7 @@
 **API Endpoint:** https://abc123xyz.ngrok-free.app/docs
 **Health Check:** https://abc123xyz.ngrok-free.app/health
 
-> ⚠️ Demo URL 7 days active rahega. Production deployment available on request.
+> ⚠️ Demo URL 7 days active.
 
 ## 📊 What It Does
 
