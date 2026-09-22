@@ -135,6 +135,7 @@ app/
 - **Infrastructure:** Docker, Docker Compose
 
 ## **Architecture Diagram**
+
 ```mermaid
 graph TD
     %% Subgraphs with deployment specs
