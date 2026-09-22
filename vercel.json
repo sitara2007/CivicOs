@@ -1,6 +1,9 @@
 {
   "version": 2,
   "framework": "nextjs",
+  "installCommand": "cd frontend && npm ci",
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/.next",
   "cleanUrls": true,
   "rewrites": [
     {

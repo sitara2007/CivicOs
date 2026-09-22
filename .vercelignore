@@ -1,38 +1,32 @@
-# Python env
-.venv/
-venv/
-env/
-**/.venv/
-**/venv/
+# Block EVERYTHING at root
+/*
+
+# Except frontend
+!/frontend
+!/frontend/**
+
+# Extra safety — explicitly block common Python files if pattern fails
 **/__pycache__/
 **/*.pyc
-
-# Backend
-app/
-cmd/
-internal/
-python-rag-service/
-scripts/
-tests/
-data/
-eval/
-
-# Python deps
-requirements.txt
-requirements*.txt
-pyproject.toml
-Pipfile*
-
-# Docker
-Dockerfile
-docker-compose.yml
-.dockerignore
-Makefile
-
-# Nested repo
-CivicOs/
-
-# Misc
-*.log
-*.db
-*.sqlite*
+**/.venv/
+**/venv/
+**/requirements*.txt
+**/pyproject.toml
+**/Pipfile*
+**/Dockerfile
+**/docker-compose.yml
+**/alembic.ini
+**/Makefile
+**/go.mod
+**/CivicOs/
+**/app/
+**/cmd/
+**/internal/
+**/python-rag-service/
+**/scripts/
+**/tests/
+**/data/
+**/eval/
+**/schema/
+**/docs/
+**/civicos.egg-info/
