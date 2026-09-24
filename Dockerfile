@@ -29,3 +29,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=worker /opt/venv /opt/venv
 COPY app ./app
 USER appuser
+EXPOSE 8000
+ENTRYPOINT ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
